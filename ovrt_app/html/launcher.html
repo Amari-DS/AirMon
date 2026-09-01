@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirMon Launcher</title>
+    <script src="ovrt-helper.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        html, body {
+            width: 100vw;
+            height: 100vh;
+            background: transparent !important;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+        }
+
+        .panel {
+            background: rgba(30, 30, 40, 0.95);
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            border-radius: 32px;
+            padding: 48px;
+            width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+            box-shadow: 0 16px 50px rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(16px);
+        }
+
+        h2 {
+            font-size: 36px;
+            font-weight: 700;
+            color: #4ade80;
+            text-align: center;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        label {
+            font-size: 22px;
+            color: #9999aa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        input {
+            background: #14141c;
+            border: 2px solid #3a3a4c;
+            border-radius: 16px;
+            color: #ffffff;
+            font-size: 32px;
+            padding: 18px 24px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            border-color: #4ade80;
+        }
+
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        button {
+            background: #4ade80;
+            color: #0b1e11;
+            border: none;
+            border-radius: 16px;
+            font-size: 28px;
+            font-weight: 700;
+            padding: 22px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background: #22c55e;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+    <div class="panel">
+        <h2>AirMon Launcher</h2>
+
+        <div class="input-group">
+            <label for="portInput">Backend port:</label>
+            <input type="number" id="portInput" value="27111" min="1" max="65535">
+        </div>
+
+        <button id="openBtn" onclick="openAirMonWindow()">Open AirMon</button>
+    </div>
+
+    <script>
+        function openAirMonWindow() {
+            const port = document.getElementById('portInput').value || 27111;
+            const targetUrl = `http://127.0.0.1:${port}/`;
+            const winWidth = 240;
+            const winHeight = 240;
+
+            const overlay_pos = {
+                posX: 0,
+                posY: 0,
+                posZ: 0,
+                rotX: 0,
+                rotY: 0,
+                rotZ: 0,
+                size: 0.1,
+                opacity: 1,
+                curvature: 0,
+                framerate: 5,
+                ecoMode: true,
+                lookHiding: false,
+                attachedDevice: 0,
+                shouldSave: true
+            };
+            const API = new OVRT();
+            API.spawnOverlay(overlay_pos).then(overlay => {
+                overlay.setBrowserOptionsEnabled(false);
+
+                overlay.setContent(0, {
+                url: targetUrl,
+                width: winWidth,
+                height: winHeight,
+                });
+            }).catch(err => {
+              console.error(err);
+            });
+        }
+    </script>
+</body>
+</html>

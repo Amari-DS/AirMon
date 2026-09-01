@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirMon HUD</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        html, body {
+            overflow: hidden;
+            background: transparent !important;
+        }
+
+        html::-webkit-scrollbar,
+        body::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
+        }
+
+        .panel {
+            background-color: rgba(15, 15, 20, 0.85);
+            color: #ffffff;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            margin: 0;
+            padding: 14px 16px;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 200px;
+            backdrop-filter: blur(8px);
+        }
+
+        .header {
+            font-size: 11px;
+            font-weight: 700;
+            color: #888899;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .label {
+            font-size: 14px;
+            color: #cccccc;
+        }
+
+        .value-box {
+            display: flex;
+            align-items: baseline;
+        }
+
+        .val {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .unit {
+            font-size: 12px;
+            color: #888899;
+            margin-left: 4px;
+        }
+
+        .co2-good { color: #4ade80; }
+        .co2-warn { color: #facc15; }
+        .co2-bad  { color: #f87171; }
+
+        .footer {
+            font-size: 11px;
+            color: #888899;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 8px;
+            margin-top: 2px;
+        }
+
+        .status-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            margin-right: 6px;
+            transition: background-color 0.3s ease;
+        }
+
+        .dot-green  { background-color: #4ade80; }
+        .dot-yellow { background-color: #facc15; }
+        .dot-red    { background-color: #f87171; }
+    </style>
+</head>
+<body>
+    <div class="panel">
+        <div id="device-name" class="header">Initializing...</div>
+
+        <div class="metric">
+            <span class="label">CO₂:</span>
+            <div class="value-box">
+                <span id="co2" class="val">--</span>
+                <span class="unit">ppm</span>
+            </div>
+        </div>
+
+        <div class="metric">
+            <span class="label">Temperature:</span>
+            <div class="value-box">
+                <span id="temp" class="val">--</span>
+                <span class="unit">°C</span>
+            </div>
+        </div>
+
+        <div class="metric">
+            <span class="label">Humidity:</span>
+            <div class="value-box">
+                <span id="hum" class="val">--</span>
+                <span class="unit">%</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            <span id="bat">Battery: --%</span>
+            <div class="status-container">
+                <span id="dot" class="status-dot dot-red"></span>
+                <span id="status">--:--</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const deviceNameEl = document.getElementById('device-name');
+        const co2El = document.getElementById('co2');
+        const tempEl = document.getElementById('temp');
+        const humEl = document.getElementById('hum');
+        const batEl = document.getElementById('bat');
+        const statusEl = document.getElementById('status');
+        const dotEl = document.getElementById('dot');
+
+        let ws;
+        let lastUpdateEpochSec = null;
+        let isWsConnected = false;
+
+        window.addEventListener('beforeunload', () => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.close(1000, 'Page reload');
+            }
+        });
+
+        function updateFreshnessIndicator() {
+            if (!isWsConnected || !lastUpdateEpochSec) {
+                dotEl.className = 'status-dot dot-red';
+                return;
+            }
+
+            const nowSec = Date.now() / 1000;
+            const diff = nowSec - lastUpdateEpochSec;
+
+            if (diff < 120) {
+                dotEl.className = 'status-dot dot-green';
+            } else if (diff < 300) {
+                dotEl.className = 'status-dot dot-yellow';
+            } else {
+                dotEl.className = 'status-dot dot-red';
+            }
+        }
+
+        setInterval(updateFreshnessIndicator, 5000);
+
+        function connect() {
+            ws = new WebSocket(`ws://${location.host}/ws`);
+
+            ws.onopen = () => {
+                isWsConnected = true;
+            };
+
+            ws.onclose = () => {
+                isWsConnected = false;
+                dotEl.className = 'status-dot dot-red';
+                setTimeout(connect, 5000);
+            };
+
+            ws.onerror = () => {
+                ws.close();
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                const s = data.sensors;
+
+                if (data.device && data.device.name) {
+                    deviceNameEl.textContent = data.device.name;
+                }
+
+                if (s.co2 !== null && s.co2 !== undefined) {
+                    co2El.textContent = s.co2;
+                    co2El.className = 'val ' + (
+                        s.co2 < 800 ? 'co2-good' :
+                        s.co2 < 1200 ? 'co2-warn' : 'co2-bad'
+                    );
+                }
+
+                if (s.temperature !== null && s.temperature !== undefined) {
+                    tempEl.textContent = s.temperature.toFixed(1);
+                }
+
+                if (s.humidity !== null && s.humidity !== undefined) {
+                    humEl.textContent = Math.round(s.humidity);
+                }
+
+                if (data.device.battery !== null && data.device.battery !== undefined) {
+                    batEl.textContent = `Battery: ${data.device.battery}%`;
+                }
+
+                if (data.timestamp) {
+                    lastUpdateEpochSec = data.timestamp;
+                    const date = new Date(data.timestamp * 1000);
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    statusEl.textContent = `${hours}:${minutes}`;
+                }
+            };
+        }
+
+        connect();
+    </script>
+</body>
+</html>
