@@ -59,7 +59,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.event.inputs.make_release == 'true'
         with:
-          files: dist/*.exe
+          files: AirMonitor_*.zip
           tag_name: "v${{ env.APP_VERSION }}-${{ github.run_number }}"
           name: "Release v${{ env.APP_VERSION }}-${{ github.run_number }}"
         env:
