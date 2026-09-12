@@ -1,7 +1,9 @@
+import argparse
 import asyncio
 
 from ble_scanner import BleScanner
-from srv_app.settings import Settings
+from ble_sniffer import sniff
+from settings import Settings
 from state import State, AirState
 from ws_server import WsServer
 
@@ -37,8 +39,20 @@ async def main():
         await scanner.stop()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='AirMon application')
+    parser.add_argument(
+        '--sniffer',
+        action='store_true',
+        help='launch sniffer',
+    )
+
+    args = parser.parse_args()
+
     try:
-        asyncio.run(main())
+        if args.sniffer:
+            asyncio.run(sniff())
+        else:
+            asyncio.run(main())
     except KeyboardInterrupt:
-        print("\nStopped")
+        print('\nStopped')
