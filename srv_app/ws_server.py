@@ -2,8 +2,8 @@ import asyncio
 
 from aiohttp import web
 
-from srv_app.misc import get_base_dir
-from srv_app.settings import Settings
+from misc import get_base_dir
+from settings import Settings
 from state import State
 
 

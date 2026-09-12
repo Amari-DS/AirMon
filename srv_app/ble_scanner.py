@@ -2,10 +2,10 @@ import time
 from bleak import BleakScanner, BLEDevice, AdvertisementData
 from habluetooth import BluetoothServiceInfoBleak
 
-from srv_app.settings import Settings
+from settings import Settings
 from state import State
-from srv_app.parsers.base import BaseBleParser
-from srv_app.parsers.factory import BleParserFactory
+from parsers.base import BaseBleParser
+from parsers.factory import BleParserFactory
 
 
 class BleScanner:

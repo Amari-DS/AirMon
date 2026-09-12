@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from habluetooth import BluetoothServiceInfoBleak
 from sensor_state_data import SensorUpdate, SensorDeviceClass
 
-from srv_app.state import AirState
+from state import AirState
 
 
 class BaseBleParser(ABC):

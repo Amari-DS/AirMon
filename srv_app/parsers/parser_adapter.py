@@ -3,8 +3,8 @@ from habluetooth.models import BluetoothServiceInfoBleak
 from qingping_ble import QingpingBluetoothDeviceData
 from sensor_state_data import SensorUpdate
 
-from srv_app.parsers.base import BaseBleParser
-from srv_app.parsers.factory import BleParserFactory
+from parsers.base import BaseBleParser
+from parsers.factory import BleParserFactory
 
 
 class BleParserAdapter[T: (BTHomeBluetoothDeviceData, QingpingBluetoothDeviceData)](BaseBleParser):

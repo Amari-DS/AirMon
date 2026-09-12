@@ -1,4 +1,4 @@
-from srv_app.parsers.base import BaseBleParser
+from parsers.base import BaseBleParser
 
 
 class BleParserFactory:

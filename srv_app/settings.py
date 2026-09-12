@@ -5,7 +5,7 @@ from typing import Optional
 
 from dotenv import load_dotenv
 
-from srv_app.misc import get_base_dir
+from misc import get_base_dir
 
 DEFAULT_PORT = 27111
 DEFAULT_BROADCAST_INTERVAL = 10
