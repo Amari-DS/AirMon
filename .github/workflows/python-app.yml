@@ -37,16 +37,24 @@ jobs:
           pip install -r requirements.txt
       - name: Build EXE with PyInstaller
         run: python -m PyInstaller AirMonitor.spec
-      - name: Rename EXE with Build Number
+
+      - name: Package EXE and HTML into ZIP
         shell: pwsh
         run: |
           $fullVersion = "${{ env.APP_VERSION }}-${{ github.run_number }}"
-          Get-ChildItem "dist/*.exe" | Rename-Item -NewName { $_.BaseName + "_" + $fullVersion + $_.Extension }
+          New-Item -ItemType Directory -Path "bundle" -Force
+          $exe = Get-ChildItem "dist/*.exe" | Select-Object -First 1
+          $newExeName = "$($exe.BaseName)_$fullVersion$($exe.Extension)"
+          Move-Item -Path $exe.FullName -Destination "bundle/$newExeName"
+          Copy-Item -Path "srv_app/index.html" -Destination "bundle/index.html"
+          $zipName = "AirMonitor_$fullVersion.zip"
+          Compress-Archive -Path "bundle/*" -DestinationPath $zipName
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: airmon-app
-          path: dist/*.exe
+          path: AirMonitor_*.zip
+
       - name: Release Manual Build
         uses: softprops/action-gh-release@v2
         if: github.event.inputs.make_release == 'true'
