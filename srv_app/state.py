@@ -36,7 +36,6 @@ class AirState:
         return json.dumps(self.to_dict())
 
     def __str__(self) -> str:
-        # Форматируем время в ЧЧ:ММ (или --:--, если данных ещё не было)
         time_str = (
             datetime.fromtimestamp(self.last_updated).strftime('%H:%M:%S')
             if self.last_updated > 0
@@ -44,8 +43,8 @@ class AirState:
         )
         temperature_str = f'{self.temperature:.1f}' if self.temperature else '-'
         humidity_str = f'{self.humidity:.0f}' if self.humidity else '-'
-        return (f'[{time_str}] "{self.name}" @ {self.address} | CO₂: {self.co2 or "-"}ppm {temperature_str}°C '
-                f'{humidity_str}% | Battery: {self.battery}% Pressure: {self.pressure or "-"}')
+        return (f'[{time_str}] "{self.name}" @ {self.address} | {self.co2 or "-"}ppm {temperature_str}°C '
+                f'{humidity_str}% | Battery: {self.battery or "-"}% Pressure: {self.pressure or "-"}')
 
 
 @dataclass

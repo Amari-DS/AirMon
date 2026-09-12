@@ -1,29 +1,28 @@
 import asyncio
 
 from ble_scanner import BleScanner
+from srv_app.settings import Settings
 from state import State, AirState
 from ws_server import WsServer
 
 
 def loop_exception_handler(loop, context):
-    """ Глушит специфичный для Windows шум при жестком разрыве сокетов """
     exception = context.get('exception')
     if isinstance(exception, ConnectionResetError):
         print('Connection reset by peer')
-        # Игнорируем ошибку [WinError 10054]
+        # ignoring [WinError 10054]
         return
-    # Все остальные непредвиденные ошибки выводим как обычно
     loop.default_exception_handler(context)
 
 
 async def main():
-    # Назначаем фильтр для текущего Event Loop
     loop = asyncio.get_running_loop()
     loop.set_exception_handler(loop_exception_handler)
 
+    settings = Settings.load()
     state = State(AirState())
-    server = WsServer(state)
-    scanner = BleScanner(state)
+    server = WsServer(state, settings)
+    scanner = BleScanner(state, settings)
 
     await server.run_server()
     await scanner.run()
